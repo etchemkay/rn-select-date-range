@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, TextStyle } from "react-native";
 
 interface IProps {
   label: string;
@@ -7,6 +7,7 @@ interface IProps {
   align?: "center" | "auto" | "left" | "right" | "justify" | undefined;
   disabled: boolean;
   font?: string;
+  textStyle?: TextStyle;
 }
 
 export default ({
@@ -15,12 +16,14 @@ export default ({
   align,
   disabled = false,
   font,
+  textStyle = {}
 }: IProps) => {
-  const textStyle = {
+  const labelStyle = {
     textAlign: align,
     opacity: disabled ? 0.2 : 1,
     fontFamily: font,
     fontSize: 14,
+    ...textStyle,
   };
 
   return (
@@ -29,7 +32,7 @@ export default ({
       style={styles.buttonContainer}
       onPress={() => onPress()}
     >
-      <Text style={textStyle}>{label}</Text>
+      <Text style={labelStyle}>{label}</Text>
     </TouchableOpacity>
   );
 };

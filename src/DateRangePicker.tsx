@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -28,6 +29,8 @@ interface IProps {
   selectedDateStyle?: TextStyle;
   todayDateStyle?: TextStyle;
   defaultDateStyle?: TextStyle;
+  navTitleStyle?: TextStyle;
+  navButtonStyle?: TextStyle;
   ln?: string;
   onConfirm?: () => void;
   onClear?:() => void;
@@ -66,6 +69,8 @@ const DateRangePicker = ({
   initialSecondDate,
   firstDateManagedValue,
   secondDateManagedValue,
+  navTitleStyle = {},
+  navButtonStyle = {},
 }: IProps) => {
   const [selectedDate, setSelectedDate] = useState(moment());
 
@@ -195,8 +200,9 @@ const DateRangePicker = ({
         disabled={minDate ? lastMonth.isBefore(minDate, "months") : false}
         label={`< ${lastMonth.locale(ln).format("MMM-YY")}`}
         onPress={() => setSelectedDate(lastMonth)}
+        textStyle={navButtonStyle}
       />
-      <Text style={{ ...styles.title, fontFamily: font }}>
+      <Text style={{ ...styles.title, fontFamily: font, ...navTitleStyle }}>
         {selectedDate.locale(ln).format("MMM YY")}
       </Text>
       <Button
@@ -205,6 +211,7 @@ const DateRangePicker = ({
         label={`${nextMonth.locale(ln).format("MMM-YY")} >`}
         onPress={() => setSelectedDate(nextMonth)}
         align="right"
+        textStyle={navButtonStyle}
       />
     </View>
   )
