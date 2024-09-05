@@ -20,6 +20,7 @@ export default ({
     textAlign: align,
     opacity: disabled ? 0.2 : 1,
     fontFamily: font,
+    fontSize: 14,
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -26,11 +26,21 @@ interface IProps {
   font?: string;
   selectedDateContainerStyle?: ViewStyle;
   selectedDateStyle?: TextStyle;
+  todayDateStyle?: TextStyle;
+  defaultDateStyle?: TextStyle;
   ln?: string;
   onConfirm?: () => void;
   onClear?:() => void;
   clearBtnTitle?: string;
   confirmBtnTitle?: string;
+  managedMode?: boolean;
+  headersBackgroundColor?: string;
+  mergeYearAndMonthPickers?: boolean;
+
+  initialFirstDate?: moment.Moment;
+  initialSecondDate?: moment.Moment;
+  firstDateManagedValue?: moment.Moment;
+  secondDateManagedValue?: moment.Moment;
 }
 
 const DateRangePicker = ({
@@ -42,16 +52,25 @@ const DateRangePicker = ({
   font,
   selectedDateContainerStyle,
   selectedDateStyle,
+  todayDateStyle,
+  defaultDateStyle,
   ln = "en",
   onConfirm,
   onClear,
   clearBtnTitle = "Clear",
-  confirmBtnTitle = "OK"
+  confirmBtnTitle = "OK",
+  managedMode = false,
+  headersBackgroundColor = '#EEEEEE',
+  mergeYearAndMonthPickers = false,
+  initialFirstDate,
+  initialSecondDate,
+  firstDateManagedValue,
+  secondDateManagedValue,
 }: IProps) => {
   const [selectedDate, setSelectedDate] = useState(moment());
 
-  const [firstDate, setFirstDate] = useState<moment.Moment | null>(null);
-  const [secondDate, setSecondDate] = useState<moment.Moment | null>(null);
+  const [firstDate, setFirstDate] = useState<moment.Moment | null>(initialFirstDate || null);
+  const [secondDate, setSecondDate] = useState<moment.Moment | null>(initialSecondDate || null);
 
   const lastMonth = selectedDate.clone().subtract(1, "months");
   const lastYear = selectedDate.clone().subtract(1, "years");
@@ -59,6 +78,11 @@ const DateRangePicker = ({
   const nextYear = selectedDate.clone().add(1, "years");
 
   moment.locale(ln);
+
+  useEffect(() => {
+    setFirstDate(firstDateManagedValue || initialFirstDate || null);
+    setSecondDate(secondDateManagedValue || initialSecondDate || null);
+  }, [firstDateManagedValue, secondDateManagedValue])
 
   const returnSelectedRange = (fd: moment.Moment, ld: moment.Moment) => {
     const isWrongSide = ld?.isBefore(fd);
@@ -122,9 +146,9 @@ const DateRangePicker = ({
 
   const isDateSelected = () => firstDate === null || secondDate === null;
 
-  return (
-    <View>
-      <View style={styles.titleRow}>
+  const separateMonthAndYearPickers = (
+    <>
+      <View style={[styles.titleRow, { backgroundColor: headersBackgroundColor }]}>
         <Button
           font={font}
           disabled={minDate ? lastYear.isBefore(minDate, "months") : false}
@@ -143,7 +167,7 @@ const DateRangePicker = ({
         />
       </View>
 
-      <View style={styles.titleRow}>
+      <View style={[styles.titleRow, { backgroundColor: headersBackgroundColor }]}>
         <Button
           font={font}
           disabled={minDate ? lastMonth.isBefore(minDate, "months") : false}
@@ -161,6 +185,34 @@ const DateRangePicker = ({
           align="right"
         />
       </View>
+    </>
+  )
+
+  const combinedMonthAndYearPickers = (
+    <View style={[styles.titleRow, { backgroundColor: headersBackgroundColor }]}>
+      <Button
+        font={font}
+        disabled={minDate ? lastMonth.isBefore(minDate, "months") : false}
+        label={`< ${lastMonth.locale(ln).format("MMM-YY")}`}
+        onPress={() => setSelectedDate(lastMonth)}
+      />
+      <Text style={{ ...styles.title, fontFamily: font }}>
+        {selectedDate.locale(ln).format("MMM YY")}
+      </Text>
+      <Button
+        font={font}
+        disabled={maxDate ? nextMonth.isAfter(maxDate, "months") : false}
+        label={`${nextMonth.locale(ln).format("MMM-YY")} >`}
+        onPress={() => setSelectedDate(nextMonth)}
+        align="right"
+      />
+    </View>
+  )
+
+  return (
+    <View>
+      {!mergeYearAndMonthPickers ? separateMonthAndYearPickers : combinedMonthAndYearPickers}
+
       <Month
         font={font}
         selectedDate={selectedDate}
@@ -171,26 +223,30 @@ const DateRangePicker = ({
         minDate={minDate}
         selectedDateContainerStyle={selectedDateContainerStyle}
         selectedDateStyle={selectedDateStyle}
+        todayDateStyle={todayDateStyle}
+        defaultDateStyle={defaultDateStyle}
       />
-      <View style={styles.actionButtonsContainer}>
-        {confirmBtnTitle ? <View>
-          <Pressable
-            onPress={onPressConfirm}
-            style={[styles.actionBtn]}
-          >
-            <Text style={{ fontFamily: font }}>{confirmBtnTitle}</Text>
-          </Pressable>
-        </View> : null}
-        {clearBtnTitle ? <View>
-          <Pressable
-            disabled={isDateSelected()}
-            onPress={onPressClear}
-            style={[styles.actionBtn, { opacity: isDateSelected() ? 0.3 : 1 }]}
-          >
-            <Text style={{ fontFamily: font }}>{clearBtnTitle}</Text>
-          </Pressable>
-        </View> : null}
-      </View>
+      {managedMode ? null: (
+        <View style={styles.actionButtonsContainer}>
+          {confirmBtnTitle ? <View>
+            <Pressable
+              onPress={onPressConfirm}
+              style={[styles.actionBtn]}
+            >
+              <Text style={{ fontFamily: font }}>{confirmBtnTitle}</Text>
+            </Pressable>
+          </View> : null}
+          {clearBtnTitle ? <View>
+            <Pressable
+              disabled={isDateSelected()}
+              onPress={onPressClear}
+              style={[styles.actionBtn, { opacity: isDateSelected() ? 0.3 : 1 }]}
+            >
+              <Text style={{ fontFamily: font }}>{clearBtnTitle}</Text>
+            </Pressable>
+          </View> : null}
+        </View>
+      )}
     </View>
   );
 };
@@ -202,13 +258,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#EEE",
-    marginBottom: 5,
+    marginBottom: 3,
     padding: 5,
     borderRadius: 5,
   },
   title: {
-    fontSize: 20,
+    fontSize: 16,
     flex: 1,
     textAlign: "center",
   },
